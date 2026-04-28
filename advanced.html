@@ -27,36 +27,54 @@
         }
 
         .control-panel {
-            width: 360px;
+            width: 320px;
             background: #fff;
-            border-radius: 16px;
-            padding: 24px;
+            border-radius: 12px;
+            padding: 16px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 12px;
             position: sticky;
             top: 20px;
             height: fit-content;
         }
 
         .panel-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             color: #1a1a2e;
             text-align: center;
-            padding-bottom: 16px;
+            padding-bottom: 12px;
             border-bottom: 1px solid #f0f0f0;
         }
 
         .section {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
+        }
+
+        .section.collapsible .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 4px 0;
+        }
+
+        .section.collapsible .collapse-icon {
+            font-size: 10px;
+            color: #999;
+            transition: transform 0.3s;
+        }
+
+        .section.collapsed .collapse-icon {
+            transform: rotate(-90deg);
         }
 
         .section-label {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             color: #333;
         }
@@ -64,23 +82,23 @@
         .grid-options {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
         }
 
         .grid-btn {
             flex: 1;
-            min-width: calc(50% - 4px);
-            padding: 10px;
+            min-width: calc(33.33% - 4px);
+            padding: 6px 4px;
             border: 2px solid #e8e8e8;
-            border-radius: 8px;
+            border-radius: 6px;
             background: #fff;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
-            font-size: 12px;
+            gap: 2px;
+            font-size: 11px;
         }
 
         .grid-btn:hover {
@@ -95,7 +113,23 @@
         }
 
         .grid-btn span {
-            font-size: 18px;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .grid-btn .grid-icon {
+            display: grid;
+            grid-template-columns: repeat(4, 4px);
+            grid-gap: 2px;
+            margin-bottom: 2px;
+        }
+
+        .grid-btn .grid-icon i {
+            display: block;
+            width: 4px;
+            height: 4px;
+            background: #1890ff;
+            border-radius: 1px;
         }
 
         .row-controls {
@@ -105,13 +139,13 @@
 
         .row-btn {
             flex: 1;
-            padding: 10px;
+            padding: 8px;
             border: 1px solid #d9d9d9;
-            border-radius: 8px;
+            border-radius: 6px;
             background: #fff;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-size: 14px;
+            font-size: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -192,16 +226,16 @@
         .input-group {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
         }
 
         .input-label {
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
         }
 
         .custom-input {
-            padding: 10px 12px;
+            padding: 6px 8px;
             border: 1px solid #d9d9d9;
             border-radius: 8px;
             font-size: 14px;
@@ -251,12 +285,12 @@
 
         .export-btn {
             margin-top: auto;
-            padding: 16px 24px;
+            padding: 12px 20px;
             background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
             color: #fff;
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -545,9 +579,9 @@
 
         .nav-links {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             justify-content: center;
-            padding-top: 16px;
+            padding-top: 10px;
             border-top: 1px solid #f0f0f0;
         }
 
@@ -565,11 +599,11 @@
 
         .tips {
             background: #f9f9f9;
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 13px;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 12px;
             color: #666;
-            line-height: 1.6;
+            line-height: 1.5;
         }
 
         .tips strong {
@@ -600,31 +634,64 @@
             <div class="panel-title">🎬 腾讯会议合影生成器</div>
             
             <div class="section">
-                <div class="section-label">选择布局 (4×n)</div>
+                <div class="section-label">选择布局</div>
                 <div class="grid-options">
                     <button class="grid-btn active" data-grid="8">
-                        <span>▦▦</span>
-                        4×2 (8人)
+                        <span class="grid-icon">
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                        </span>
+                        2×4
                     </button>
                     <button class="grid-btn" data-grid="12">
-                        <span>▦▦▦</span>
-                        4×3 (12人)
+                        <span class="grid-icon">
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                        </span>
+                        3×4
                     </button>
                     <button class="grid-btn" data-grid="16">
-                        <span>▦▦▦▦</span>
-                        4×4 (16人)
+                        <span class="grid-icon">
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                        </span>
+                        4×4
                     </button>
                     <button class="grid-btn" data-grid="20">
-                        <span>▦▦▦▦▦</span>
-                        4×5 (20人)
+                        <span class="grid-icon">
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                        </span>
+                        5×4
                     </button>
                     <button class="grid-btn" data-grid="24">
-                        <span>▦▦▦▦▦▦</span>
-                        4×6 (24人)
+                        <span class="grid-icon">
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                        </span>
+                        6×4
                     </button>
                     <button class="grid-btn" data-grid="28">
-                        <span>▦▦▦▦▦▦▦</span>
-                        4×7 (28人)
+                        <span class="grid-icon">
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i>
+                        </span>
+                        7×4
                     </button>
                 </div>
             </div>
@@ -652,43 +719,46 @@
                 <img class="bg-preview" id="bgPreview" alt="背景预览">
             </div>
 
-            <div class="section">
-                <div class="section-label">自定义文字</div>
-                <div class="input-group">
-                    <label class="input-label">姓名框背景透明度</label>
-                    <input type="range" class="custom-input" id="bgOpacity" min="30" max="90" value="70">
+            <div class="section collapsible">
+                <div class="section-header">
+                    <span class="section-label">自定义文字</span>
+                    <span class="collapse-icon">▼</span>
                 </div>
-                <div class="input-group">
-                    <label class="input-label">文字大小比例 (%)</label>
-                    <input type="range" class="custom-input" id="fontSize" min="50" max="100" value="70">
-                </div>
-            </div>
-
-            <div class="section">
-                <div class="toggle-row">
-                    <span class="input-label">显示麦克风图标</span>
-                    <div class="toggle-switch active" id="showMic"></div>
+                <div class="section-content" style="display: none;">
+                    <div class="input-group">
+                        <label class="input-label">姓名框背景透明度</label>
+                        <input type="range" class="custom-input" id="bgOpacity" min="30" max="90" value="70">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">文字大小比例 (%)</label>
+                        <input type="range" class="custom-input" id="fontSize" min="50" max="100" value="70">
+                    </div>
+                    <div class="toggle-row">
+                        <span class="input-label">显示麦克风图标</span>
+                        <div class="toggle-switch active" id="showMic"></div>
+                    </div>
                 </div>
             </div>
 
             <div class="tips">
                 <strong>使用说明：</strong><br>
-                1. 选择布局或调整行数<br>
+                1. 选择布局<br>
                 2. 上传背景图片（可选）<br>
-                3. 点击格子上传头像（支持拖拽）<br>
-                4. 拖拽调整头像位置和大小<br>
-                5. 输入参会人姓名<br>
-                6. 点击导出保存
+                3. 点击格子上传头像<br>
+                4. 拖拽或使用方向键调整头像<br>
+                5. 输入姓名<br>
+                6. 导出合影
             </div>
 
             <div class="row-controls">
-                    <button class="row-btn" id="saveBtn" title="保存当前设置">
-                        <span>💾</span> 暂存
+                    <button class="row-btn" id="saveBtn" title="保存当前设置到文件">
+                        <span>💾</span> 导出设置
                     </button>
-                    <button class="row-btn" id="loadBtn" title="加载已保存的设置">
-                        <span>📂</span> 加载
+                    <button class="row-btn" id="loadBtn" title="从文件加载设置">
+                        <span>📂</span> 导入设置
                     </button>
                 </div>
+                <input type="file" id="loadFileInput" accept=".json" style="display: none;">
 
                 <button class="export-btn" id="exportBtn">📥 导出合影</button>
 
@@ -740,6 +810,15 @@
         }
 
         function setupEventListeners() {
+            document.querySelectorAll('.collapsible .section-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const section = header.parentElement;
+                    const content = section.querySelector('.section-content');
+                    section.classList.toggle('collapsed');
+                    content.style.display = content.style.display === 'none' ? 'block' : 'none';
+                });
+            });
+            
             document.querySelectorAll('.grid-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     document.querySelectorAll('.grid-btn').forEach(b => b.classList.remove('active'));
@@ -780,8 +859,15 @@
                     showToast('导出异常，请刷新页面重试', 'error');
                 }
             });
-            document.getElementById('saveBtn').addEventListener('click', saveState);
-            document.getElementById('loadBtn').addEventListener('click', loadState);
+            document.getElementById('saveBtn').addEventListener('click', () => {
+                console.log('点击暂存按钮');
+                saveState();
+            });
+            document.getElementById('loadBtn').addEventListener('click', () => {
+                console.log('点击加载按钮');
+                loadState();
+            });
+            document.getElementById('loadFileInput').addEventListener('change', handleLoadFile);
             setupBackgroundUpload();
         }
 
@@ -1286,60 +1372,76 @@
             };
             
             try {
-                localStorage.setItem('meetingPhotoState', JSON.stringify(saveData));
-                showToast('暂存成功', 'success');
+                const dataStr = JSON.stringify(saveData);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `会议合影设置_${state.gridType}人_${Date.now()}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+                showToast('设置已导出', 'success');
             } catch (error) {
-                console.error('保存失败:', error);
-                showToast('暂存失败', 'error');
+                console.error('导出失败:', error);
+                showToast('导出失败', 'error');
             }
         }
 
         function loadState() {
-            const savedData = localStorage.getItem('meetingPhotoState');
-            if (!savedData) {
-                showToast('暂无暂存数据', 'error');
+            document.getElementById('loadFileInput').click();
+        }
+
+        function handleLoadFile(event) {
+            console.log('handleLoadFile被调用', event);
+            const file = event.target.files[0];
+            if (!file) {
+                console.log('没有选择文件');
                 return;
             }
+            console.log('选择的文件:', file.name);
             
-            try {
-                const data = JSON.parse(savedData);
-                
-                state.gridType = data.gridType;
-                state.cells = data.cells;
-                state.backgroundImage = data.backgroundImage;
-                state.bgOpacity = data.bgOpacity || 70;
-                state.fontSize = data.fontSize || 70;
-                state.showMic = data.showMic !== undefined ? data.showMic : true;
-                state.avatarTransforms = data.avatarTransforms || {};
-                
-                document.querySelectorAll('.grid-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                    if (parseInt(btn.dataset.grid) === state.gridType) {
-                        btn.classList.add('active');
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    state.gridType = data.gridType;
+                    state.cells = data.cells;
+                    state.backgroundImage = data.backgroundImage;
+                    state.bgOpacity = data.bgOpacity || 70;
+                    state.fontSize = data.fontSize || 70;
+                    state.showMic = data.showMic !== undefined ? data.showMic : true;
+                    state.avatarTransforms = data.avatarTransforms || {};
+                    
+                    document.querySelectorAll('.grid-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                        if (parseInt(btn.dataset.grid) === state.gridType) {
+                            btn.classList.add('active');
+                        }
+                    });
+                    
+                    document.getElementById('bgOpacity').value = state.bgOpacity;
+                    document.getElementById('fontSize').value = state.fontSize;
+                    
+                    const micToggle = document.getElementById('showMic');
+                    micToggle.classList.toggle('active', state.showMic);
+                    
+                    if (state.backgroundImage) {
+                        document.getElementById('bgPreview').src = state.backgroundImage;
+                        document.getElementById('bgPreview').classList.add('show');
                     }
-                });
-                
-                document.getElementById('bgOpacity').value = state.bgOpacity;
-                document.getElementById('fontSize').value = state.fontSize;
-                
-                const micToggle = document.getElementById('showMic');
-                micToggle.classList.toggle('active', state.showMic);
-                
-                if (state.backgroundImage) {
-                    document.getElementById('bgPreview').src = state.backgroundImage;
-                    document.getElementById('bgPreview').classList.add('show');
+                    
+                    renderGrid();
+                    updateRowControls();
+                    updateCurrentLayout();
+                    updateNameBoxStyle();
+                    
+                    showToast('加载成功', 'success');
+                } catch (error) {
+                    console.error('加载失败:', error);
+                    showToast('加载失败', 'error');
                 }
-                
-                renderGrid();
-                updateRowControls();
-                updateCurrentLayout();
-                updateNameBoxStyle();
-                
-                showToast('加载成功', 'success');
-            } catch (error) {
-                console.error('加载失败:', error);
-                showToast('加载失败', 'error');
-            }
+            };
         }
 
         function showToast(message, type = '') {
