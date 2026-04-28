@@ -1460,6 +1460,7 @@
                     showToast('加载失败', 'error');
                 }
             };
+            reader.readAsText(file);
         }
 
         function showToast(message, type = '') {
