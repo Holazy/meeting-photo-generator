@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>腾讯会议合影生成器 - 增强版</title>
+    <script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/dist/dom-to-image.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            display: flex;
+            gap: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .control-panel {
+            width: 360px;
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a2e;
+            text-align: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .section-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .grid-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .grid-btn {
+            flex: 1;
+            min-width: calc(50% - 4px);
+            padding: 12px;
+            border: 2px solid #e8e8e8;
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .grid-btn:hover {
+            border-color: #1890ff;
+            background: #e6f7ff;
+        }
+
+        .grid-btn.active {
+            border-color: #1890ff;
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .grid-btn span {
+            font-size: 20px;
+        }
+
+        .upload-area {
+            border: 2px dashed #d9d9d9;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: #1890ff;
+            background: #e6f7ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #1890ff;
+            background: #e6f7ff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+
+        .upload-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .bg-preview {
+            margin-top: 12px;
+            max-width: 100%;
+            max-height: 120px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .bg-preview.show {
+            display: block;
+        }
+
+        .theme-options {
+            display: flex;
+            gap: 8px;
+        }
+
+        .theme-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-btn.active {
+            border-color: #fff;
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.2);
+        }
+
+        .theme-red { background: linear-gradient(135deg, #ff6b6b, #ee5a5a); }
+        .theme-blue { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
+        .theme-purple { background: linear-gradient(135deg, #a855f7, #7c3aed); }
+        .theme-green { background: linear-gradient(135deg, #84fab0, #8fd3f4); }
+        .theme-orange { background: linear-gradient(135deg, #ffecd2, #fcb69f); }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .custom-input {
+            padding: 10px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .custom-input:focus {
+            border-color: #1890ff;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 28px;
+            background: #d9d9d9;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: #1890ff;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: #fff;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: left 0.3s ease;
+        }
+
+        .toggle-switch.active::after {
+            left: 25px;
+        }
+
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .export-btn {
+            margin-top: auto;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+        }
+
+        .preview-area {
+            flex: 1;
+            padding: 24px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .preview-header {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .grid-container {
+            display: grid;
+            gap: 1px;
+            background: #000;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .grid-cell {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+            background-color: #e8e8e8;
+            aspect-ratio: 16 / 9;
+        }
+
+        .cell-avatar {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            height: 62%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        .cell-avatar img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+
+        .grid-cell:hover {
+            z-index: 1;
+            outline: 2px solid #1890ff;
+        }
+
+        .cell-upload-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 10%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 14px;
+            z-index: 10;
+        }
+
+        .grid-cell:hover .cell-upload-overlay {
+            display: flex;
+        }
+
+        .cell-name-box {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 10%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            gap: 4px;
+            width: auto;
+            min-width: 30%;
+            max-width: 60%;
+            font-size: 100%;
+        }
+
+        .cell-mic-icon {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+        }
+
+        .cell-mic-icon svg {
+            width: 10px;
+            height: 14px;
+            fill: #fff;
+        }
+
+        .cell-name-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: calc(100% * 0.7);
+            text-align: left;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            outline: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1;
+            height: 14px;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .cell-name-input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-content {
+            text-align: center;
+            color: #fff;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: #1890ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: #52c41a;
+        }
+
+        .toast.error {
+            background: #ff4d4f;
+        }
+
+        .hidden-input {
+            display: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .nav-link {
+            color: #1890ff;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #096dd9;
+            text-decoration: underline;
+        }
+
+        .tips {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .tips strong {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="control-panel">
+            <div class="panel-title">🎬 腾讯会议合影生成器</div>
+            
+            <div class="section">
+                <div class="section-label">选择布局 (4×n)</div>
+                <div class="grid-options">
+                    <button class="grid-btn active" data-grid="8">
+                        <span>▦▦</span>
+                        4×2 (8人)
+                    </button>
+                    <button class="grid-btn" data-grid="12">
+                        <span>▦▦▦</span>
+                        4×3 (12人)
+                    </button>
+                    <button class="grid-btn" data-grid="16">
+                        <span>▦▦▦▦</span>
+                        4×4 (16人)
+                    </button>
+                    <button class="grid-btn" data-grid="20">
+                        <span>▦▦▦▦▦</span>
+                        4×5 (20人)
+                    </button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-label">选择主题色</div>
+                <div class="theme-options">
+                    <button class="theme-btn theme-red active" data-theme="red"></button>
+                    <button class="theme-btn theme-blue" data-theme="blue"></button>
+                    <button class="theme-btn theme-purple" data-theme="purple"></button>
+                    <button class="theme-btn theme-green" data-theme="green"></button>
+                    <button class="theme-btn theme-orange" data-theme="orange"></button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-label">上传背景图片</div>
+                <div class="upload-area" id="bgUpload">
+                    <div class="upload-icon">🖼️</div>
+                    <div class="upload-text">点击或拖拽上传背景</div>
+                    <div class="upload-hint">支持 JPG、PNG 格式</div>
+                </div>
+                <img class="bg-preview" id="bgPreview" alt="背景预览">
+            </div>
+
+            <div class="section">
+                <div class="section-label">自定义文字</div>
+                <div class="input-group">
+                    <label class="input-label">姓名框背景透明度</label>
+                    <input type="range" class="custom-input" id="bgOpacity" min="30" max="90" value="70">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">文字大小比例 (%)</label>
+                    <input type="range" class="custom-input" id="fontSize" min="50" max="100" value="70">
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="toggle-row">
+                    <span class="input-label">显示麦克风图标</span>
+                    <div class="toggle-switch active" id="showMic"></div>
+                </div>
+                <div class="toggle-row">
+                    <span class="input-label">导出高分辨率</span>
+                    <div class="toggle-switch active" id="highRes"></div>
+                </div>
+            </div>
+
+            <div class="tips">
+                <strong>使用说明：</strong><br>
+                1. 选择布局和主题<br>
+                2. 上传背景图片（可选）<br>
+                3. 点击格子上传头像<br>
+                4. 输入参会人姓名<br>
+                5. 点击导出保存
+            </div>
+
+            <button class="export-btn" id="exportBtn">📥 导出合影</button>
+
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">← 返回标准版</a>
+            </div>
+        </div>
+
+        <div class="preview-area">
+            <div class="preview-header">合影预览</div>
+            <div class="grid-container" id="gridContainer"></div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div id="loadingText">正在处理...</div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <input type="file" class="hidden-input" id="avatarInput" accept="image/*">
+
+    <script>
+        const state = {
+            gridType: 8,
+            cells: [],
+            backgroundImage: null,
+            theme: 'red',
+            bgOpacity: 70,
+            fontSize: 70,
+            showMic: true,
+            highRes: true
+        };
+
+        const gridConfigs = {
+            8: { cols: 4, rows: 2 },
+            12: { cols: 4, rows: 3 },
+            16: { cols: 4, rows: 4 },
+            20: { cols: 4, rows: 5 }
+        };
+
+        const themes = {
+            red: 'linear-gradient(135deg, #ff6b6b, #ee5a5a)',
+            blue: 'linear-gradient(135deg, #4ecdc4, #44a08d)',
+            purple: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+            green: 'linear-gradient(135deg, #84fab0, #8fd3f4)',
+            orange: 'linear-gradient(135deg, #ffecd2, #fcb69f)'
+        };
+
+        function init() {
+            setupEventListeners();
+            renderGrid();
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('.grid-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.grid-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.gridType = parseInt(btn.dataset.grid);
+                    state.cells = [];
+                    renderGrid();
+                });
+            });
+
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.theme = btn.dataset.theme;
+                    document.body.style.background = themes[state.theme];
+                });
+            });
+
+            document.getElementById('bgOpacity').addEventListener('input', (e) => {
+                state.bgOpacity = parseInt(e.target.value);
+                updateNameBoxStyle();
+            });
+
+            document.getElementById('fontSize').addEventListener('input', (e) => {
+                state.fontSize = parseInt(e.target.value);
+                updateNameBoxStyle();
+            });
+
+            document.getElementById('showMic').addEventListener('click', toggleMic);
+            document.getElementById('highRes').addEventListener('click', toggleHighRes);
+            document.getElementById('exportBtn').addEventListener('click', exportImage);
+            setupBackgroundUpload();
+        }
+
+        function toggleMic() {
+            const toggle = document.getElementById('showMic');
+            toggle.classList.toggle('active');
+            state.showMic = toggle.classList.contains('active');
+            renderGrid();
+        }
+
+        function toggleHighRes() {
+            const toggle = document.getElementById('highRes');
+            toggle.classList.toggle('active');
+            state.highRes = toggle.classList.contains('active');
+        }
+
+        function updateNameBoxStyle() {
+            const nameBoxes = document.querySelectorAll('.cell-name-box');
+            nameBoxes.forEach(box => {
+                box.style.background = `rgba(0,0,0,${state.bgOpacity / 100})`;
+            });
+            const inputs = document.querySelectorAll('.cell-name-input');
+            inputs.forEach(input => {
+                input.style.fontSize = `${state.fontSize}%`;
+            });
+        }
+
+        function setupBackgroundUpload() {
+            const uploadArea = document.getElementById('bgUpload');
+            const bgPreview = document.getElementById('bgPreview');
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'file';
+            hiddenInput.accept = 'image/*';
+            
+            uploadArea.addEventListener('click', () => {
+                hiddenInput.click();
+            });
+
+            hiddenInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    handleBackgroundUpload(file);
+                }
+            });
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    handleBackgroundUpload(file);
+                }
+            });
+
+            async function handleBackgroundUpload(file) {
+                showLoading('正在上传背景...');
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    state.backgroundImage = e.target.result;
+                    bgPreview.src = e.target.result;
+                    bgPreview.classList.add('show');
+                    renderGrid();
+                    hideLoading();
+                    showToast('背景图片上传成功', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function renderGrid() {
+            const config = gridConfigs[state.gridType];
+            const container = document.getElementById('gridContainer');
+            
+            container.style.gridTemplateColumns = `repeat(${config.cols}, 1fr)`;
+            container.style.gridTemplateRows = `repeat(${config.rows}, 1fr)`;
+            container.innerHTML = '';
+
+            for (let i = 0; i < state.gridType; i++) {
+                const cell = state.cells[i] || { avatar: null, name: '' };
+                
+                const cellEl = document.createElement('div');
+                cellEl.className = 'grid-cell';
+                
+                if (state.backgroundImage) {
+                    cellEl.style.backgroundImage = `url(${state.backgroundImage})`;
+                }
+
+                if (cell.avatar) {
+                    const avatarDiv = document.createElement('div');
+                    avatarDiv.className = 'cell-avatar';
+                    const avatarImg = document.createElement('img');
+                    avatarImg.src = cell.avatar;
+                    avatarDiv.appendChild(avatarImg);
+                    cellEl.appendChild(avatarDiv);
+                }
+
+                const overlay = document.createElement('div');
+                overlay.className = 'cell-upload-overlay';
+                overlay.innerHTML = cell.avatar ? '更换头像' : '点击上传头像';
+                overlay.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openAvatarUpload(i);
+                });
+
+                const nameBox = document.createElement('div');
+                nameBox.className = 'cell-name-box';
+                nameBox.style.background = `rgba(0,0,0,${state.bgOpacity / 100})`;
+                
+                if (state.showMic) {
+                    const micIcon = document.createElement('span');
+                    micIcon.className = 'cell-mic-icon';
+                    micIcon.innerHTML = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>';
+                    nameBox.appendChild(micIcon);
+                }
+                
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.className = 'cell-name-input';
+                nameInput.placeholder = '姓名 院校';
+                nameInput.value = cell.name;
+                nameInput.maxLength = 20;
+                nameInput.style.fontSize = `${state.fontSize}%`;
+                nameInput.addEventListener('input', (e) => {
+                    state.cells[i] = state.cells[i] || { avatar: null, name: '' };
+                    state.cells[i].name = e.target.value;
+                });
+                nameInput.addEventListener('click', (e) => e.stopPropagation());
+
+                nameBox.appendChild(nameInput);
+
+                cellEl.appendChild(overlay);
+                cellEl.appendChild(nameBox);
+                cellEl.addEventListener('click', () => openAvatarUpload(i));
+
+                container.appendChild(cellEl);
+            }
+        }
+
+        function openAvatarUpload(index) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    await handleAvatarUpload(index, file);
+                }
+            };
+            input.click();
+        }
+
+        async function handleAvatarUpload(index, file) {
+            showLoading('正在处理...');
+            
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const response = await fetch(e.target.result);
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    
+                    state.cells[index] = state.cells[index] || { avatar: null, name: '' };
+                    state.cells[index].avatar = url;
+                    
+                    renderGrid();
+                    hideLoading();
+                    showToast('头像上传成功', 'success');
+                } catch (error) {
+                    console.error('处理失败:', error);
+                    hideLoading();
+                    state.cells[index] = state.cells[index] || { avatar: null, name: '' };
+                    state.cells[index].avatar = e.target.result;
+                    renderGrid();
+                    showToast('头像上传成功', 'success');
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function exportImage() {
+            showLoading('正在导出...');
+            
+            const container = document.getElementById('gridContainer');
+            
+            try {
+                const pixelRatio = state.highRes ? 4 : 2;
+                const dataUrl = await domtoimage.toPng(container, {
+                    quality: 1,
+                    pixelRatio: pixelRatio,
+                    bgcolor: '#000000'
+                });
+                
+                const link = document.createElement('a');
+                link.download = `会议合影_${state.gridType}人.png`;
+                link.href = dataUrl;
+                link.click();
+                
+                hideLoading();
+                showToast('合影导出成功', 'success');
+            } catch (error) {
+                console.error('导出失败:', error);
+                hideLoading();
+                showToast('导出失败', 'error');
+            }
+        }
+
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingOverlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+
+        function showToast(message, type = '') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
