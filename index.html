@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>腾讯会议合影生成器</title>
-    <script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/dist/dom-to-image.min.js"></script>
+https://holazy.github.io/meeting-photo-generator/    <script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/dist/dom-to-image.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -123,6 +123,55 @@
             transform: translateY(0);
         }
 
+        .upload-area {
+            border: 2px dashed #d9d9d9;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .upload-area:hover {
+            border-color: #1890ff;
+            background: #e6f7ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #1890ff;
+            background: #e6f7ff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .upload-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .bg-preview {
+            margin-top: 12px;
+            max-width: 100%;
+            max-height: 120px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .bg-preview.show {
+            display: block;
+        }
+
         .preview-area {
             flex: 1;
             padding: 24px;
@@ -155,6 +204,25 @@
             background-size: cover;
             background-position: center;
             background-color: #e8e8e8;
+        }
+
+        .cell-avatar {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            height: 62%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        .cell-avatar img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
         }
 
         .grid-cell:hover {
@@ -369,12 +437,23 @@
                 </div>
             </div>
 
+            <div class="section">
+                <div class="section-label">上传背景图片</div>
+                <div class="upload-area" id="bgUpload">
+                    <div class="upload-icon">🖼️</div>
+                    <div class="upload-text">点击或拖拽上传背景</div>
+                    <div class="upload-hint">支持 JPG、PNG 格式</div>
+                </div>
+                <img class="bg-preview" id="bgPreview" alt="背景预览">
+            </div>
+
             <div class="tips">
                 <strong>使用说明：</strong><br>
                 1. 选择宫格数量<br>
-                2. 点击每个格子上传人物头像<br>
-                3. 在左下角输入参会人姓名<br>
-                4. 点击导出按钮保存合影
+                2. 上传背景图片（可选）<br>
+                3. 点击或拖拽上传人物头像<br>
+                4. 在左下角输入参会人姓名<br>
+                5. 点击导出按钮保存合影
                 <br><br>
                 <button class="export-btn" id="exportBtn">📥 导出合影</button>
             </div>
@@ -398,7 +477,8 @@
     <script>
         const state = {
             gridType: 9,
-            cells: []
+            cells: [],
+            backgroundImage: null
         };
 
         const gridConfigs = {
@@ -424,6 +504,59 @@
             });
 
             document.getElementById('exportBtn').addEventListener('click', exportImage);
+
+            setupBackgroundUpload();
+        }
+
+        function setupBackgroundUpload() {
+            const uploadArea = document.getElementById('bgUpload');
+            const bgPreview = document.getElementById('bgPreview');
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'file';
+            hiddenInput.accept = 'image/*';
+            
+            uploadArea.addEventListener('click', () => {
+                hiddenInput.click();
+            });
+
+            hiddenInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    handleBackgroundUpload(file);
+                }
+            });
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    handleBackgroundUpload(file);
+                }
+            });
+
+            async function handleBackgroundUpload(file) {
+                showLoading('正在上传背景...');
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    state.backgroundImage = e.target.result;
+                    bgPreview.src = e.target.result;
+                    bgPreview.classList.add('show');
+                    renderGrid();
+                    hideLoading();
+                    showToast('背景图片上传成功', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
         }
 
         function renderGrid() {
@@ -440,8 +573,17 @@
                 const cellEl = document.createElement('div');
                 cellEl.className = 'grid-cell';
                 
+                if (state.backgroundImage) {
+                    cellEl.style.backgroundImage = `url(${state.backgroundImage})`;
+                }
+
                 if (cell.avatar) {
-                    cellEl.style.backgroundImage = `url(${cell.avatar})`;
+                    const avatarDiv = document.createElement('div');
+                    avatarDiv.className = 'cell-avatar';
+                    const avatarImg = document.createElement('img');
+                    avatarImg.src = cell.avatar;
+                    avatarDiv.appendChild(avatarImg);
+                    cellEl.appendChild(avatarDiv);
                 }
 
                 const overlay = document.createElement('div');
