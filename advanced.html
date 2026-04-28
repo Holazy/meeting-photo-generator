@@ -344,11 +344,24 @@
             justify-content: center;
             color: #fff;
             font-size: 14px;
-            z-index: 10;
+            z-index: 5;
+            pointer-events: none;
         }
 
         .grid-cell:hover .cell-upload-overlay {
             display: flex;
+        }
+
+        .grid-cell.has-avatar:hover .cell-upload-overlay {
+            display: none;
+        }
+
+        .upload-trigger {
+            cursor: pointer;
+            pointer-events: auto;
+            padding: 8px 16px;
+            background: rgba(24, 144, 255, 0.8);
+            border-radius: 4px;
         }
 
         .cell-name-box {
@@ -890,7 +903,7 @@
                 const transform = state.avatarTransforms[i] || { scale: 1, x: 0, y: 0 };
                 
                 const cellEl = document.createElement('div');
-                cellEl.className = 'grid-cell';
+                cellEl.className = 'grid-cell' + (cell.avatar ? ' has-avatar' : '');
                 cellEl.dataset.index = i;
                 
                 if (state.backgroundImage) {
@@ -949,11 +962,20 @@
 
                 const overlay = document.createElement('div');
                 overlay.className = 'cell-upload-overlay';
-                overlay.innerHTML = cell.avatar ? '更换头像' : '点击上传头像';
-                overlay.addEventListener('click', (e) => {
+                
+                const uploadTrigger = document.createElement('span');
+                uploadTrigger.className = 'upload-trigger';
+                uploadTrigger.innerHTML = cell.avatar ? '更换头像' : '点击上传头像';
+                uploadTrigger.addEventListener('click', (e) => {
                     e.stopPropagation();
                     openAvatarUpload(i);
                 });
+                
+                overlay.appendChild(uploadTrigger);
+                
+                if (!cell.avatar) {
+                    cellEl.appendChild(overlay);
+                }
 
                 const nameBox = document.createElement('div');
                 nameBox.className = 'cell-name-box';
