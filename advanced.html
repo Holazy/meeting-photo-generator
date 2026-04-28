@@ -307,15 +307,17 @@
 
         .cell-avatar {
             position: absolute;
-            top: 50%;
+            bottom: -20%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            width: 70%;
-            height: 62%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 100%;
+            padding-bottom: 10%;
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             justify-content: center;
-            z-index: 1;
+            z-index: 2;
+            pointer-events: none;
         }
 
         .cell-avatar img {
@@ -325,6 +327,8 @@
             border-radius: 4px;
             cursor: move;
             user-select: none;
+            pointer-events: auto;
+            touch-action: none;
         }
 
         .grid-cell:hover {
@@ -378,6 +382,7 @@
             min-width: 30%;
             max-width: 60%;
             font-size: 100%;
+            z-index: 3;
         }
 
         .cell-mic-icon {
@@ -428,7 +433,27 @@
             z-index: 20;
         }
 
+        .direction-controls {
+            position: absolute;
+            bottom: 12%;
+            right: 4px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            z-index: 20;
+        }
+
+        .direction-row {
+            display: flex;
+            gap: 2px;
+        }
+
         .grid-cell:hover .image-controls {
+            display: flex;
+        }
+
+        .grid-cell:hover .direction-controls {
             display: flex;
         }
 
@@ -644,10 +669,6 @@
                     <span class="input-label">显示麦克风图标</span>
                     <div class="toggle-switch active" id="showMic"></div>
                 </div>
-                <div class="toggle-row">
-                    <span class="input-label">导出高分辨率</span>
-                    <div class="toggle-switch active" id="highRes"></div>
-                </div>
             </div>
 
             <div class="tips">
@@ -660,7 +681,16 @@
                 6. 点击导出保存
             </div>
 
-            <button class="export-btn" id="exportBtn">📥 导出合影</button>
+            <div class="row-controls">
+                    <button class="row-btn" id="saveBtn" title="保存当前设置">
+                        <span>💾</span> 暂存
+                    </button>
+                    <button class="row-btn" id="loadBtn" title="加载已保存的设置">
+                        <span>📂</span> 加载
+                    </button>
+                </div>
+
+                <button class="export-btn" id="exportBtn">📥 导出合影</button>
 
             <div class="nav-links">
                 <a href="index.html" class="nav-link">← 返回标准版</a>
@@ -691,7 +721,6 @@
             bgOpacity: 70,
             fontSize: 70,
             showMic: true,
-            highRes: true,
             avatarTransforms: {}
         };
 
@@ -742,8 +771,17 @@
             });
 
             document.getElementById('showMic').addEventListener('click', toggleMic);
-            document.getElementById('highRes').addEventListener('click', toggleHighRes);
-            document.getElementById('exportBtn').addEventListener('click', exportImage);
+            document.getElementById('exportBtn').addEventListener('click', async () => {
+                console.log('导出按钮点击');
+                try {
+                    await exportImage();
+                } catch (error) {
+                    console.error('导出异常:', error);
+                    showToast('导出异常，请刷新页面重试', 'error');
+                }
+            });
+            document.getElementById('saveBtn').addEventListener('click', saveState);
+            document.getElementById('loadBtn').addEventListener('click', loadState);
             setupBackgroundUpload();
         }
 
@@ -797,12 +835,6 @@
             toggle.classList.toggle('active');
             state.showMic = toggle.classList.contains('active');
             renderGrid();
-        }
-
-        function toggleHighRes() {
-            const toggle = document.getElementById('highRes');
-            toggle.classList.toggle('active');
-            state.highRes = toggle.classList.contains('active');
         }
 
         function updateNameBoxStyle() {
@@ -960,6 +992,61 @@
                 imageControls.appendChild(resetBtn);
                 cellEl.appendChild(imageControls);
 
+                if (cell.avatar) {
+                    const directionControls = document.createElement('div');
+                    directionControls.className = 'direction-controls';
+                    
+                    const moveUpBtn = document.createElement('button');
+                    moveUpBtn.className = 'control-btn';
+                    moveUpBtn.innerHTML = '↑';
+                    moveUpBtn.title = '上移';
+                    moveUpBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        moveImage(i, 0, -5);
+                    });
+                    
+                    const moveDownBtn = document.createElement('button');
+                    moveDownBtn.className = 'control-btn';
+                    moveDownBtn.innerHTML = '↓';
+                    moveDownBtn.title = '下移';
+                    moveDownBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        moveImage(i, 0, 5);
+                    });
+                    
+                    const moveLeftBtn = document.createElement('button');
+                    moveLeftBtn.className = 'control-btn';
+                    moveLeftBtn.innerHTML = '←';
+                    moveLeftBtn.title = '左移';
+                    moveLeftBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        moveImage(i, -5, 0);
+                    });
+                    
+                    const moveRightBtn = document.createElement('button');
+                    moveRightBtn.className = 'control-btn';
+                    moveRightBtn.innerHTML = '→';
+                    moveRightBtn.title = '右移';
+                    moveRightBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        moveImage(i, 5, 0);
+                    });
+                    
+                    const topRow = document.createElement('div');
+                    topRow.className = 'direction-row';
+                    topRow.appendChild(moveUpBtn);
+                    
+                    const middleRow = document.createElement('div');
+                    middleRow.className = 'direction-row';
+                    middleRow.appendChild(moveLeftBtn);
+                    middleRow.appendChild(moveDownBtn);
+                    middleRow.appendChild(moveRightBtn);
+                    
+                    directionControls.appendChild(topRow);
+                    directionControls.appendChild(middleRow);
+                    cellEl.appendChild(directionControls);
+                }
+
                 const overlay = document.createElement('div');
                 overlay.className = 'cell-upload-overlay';
                 
@@ -1005,7 +1092,11 @@
 
                 cellEl.appendChild(overlay);
                 cellEl.appendChild(nameBox);
-                cellEl.addEventListener('click', () => openAvatarUpload(i));
+                cellEl.addEventListener('click', (e) => {
+                    if (!e.target.closest('.cell-avatar img')) {
+                        openAvatarUpload(i);
+                    }
+                });
 
                 container.appendChild(cellEl);
             }
@@ -1021,9 +1112,11 @@
                 startX = e.clientX;
                 startY = e.clientY;
                 
-                const transform = state.avatarTransforms[index] || { scale: 1, x: 0, y: 0 };
-                startTranslateX = transform.x;
-                startTranslateY = transform.y;
+                if (!state.avatarTransforms[index]) {
+                    state.avatarTransforms[index] = { scale: 1, x: 0, y: 0 };
+                }
+                startTranslateX = state.avatarTransforms[index].x;
+                startTranslateY = state.avatarTransforms[index].y;
                 
                 document.addEventListener('mousemove', onMouseMove);
                 document.addEventListener('mouseup', onMouseUp);
@@ -1031,12 +1124,13 @@
             
             function onMouseMove(e) {
                 if (!isDragging) return;
-                e.preventDefault();
                 
                 const dx = e.clientX - startX;
                 const dy = e.clientY - startY;
                 
-                state.avatarTransforms[index] = state.avatarTransforms[index] || { scale: 1, x: 0, y: 0 };
+                if (!state.avatarTransforms[index]) {
+                    state.avatarTransforms[index] = { scale: 1, x: 0, y: 0 };
+                }
                 state.avatarTransforms[index].x = startTranslateX + dx;
                 state.avatarTransforms[index].y = startTranslateY + dy;
                 
@@ -1050,9 +1144,20 @@
             }
         }
 
+        function moveImage(index, dx, dy) {
+            state.avatarTransforms[index] = state.avatarTransforms[index] || { scale: 1, x: 0, y: 0 };
+            state.avatarTransforms[index].x += dx;
+            state.avatarTransforms[index].y += dy;
+            
+            const img = document.querySelector(`.cell-avatar img[data-index="${index}"]`);
+            if (img) {
+                img.style.transform = `translate(${state.avatarTransforms[index].x}px, ${state.avatarTransforms[index].y}px) scale(${state.avatarTransforms[index].scale})`;
+            }
+        }
+
         function zoomImage(index, factor) {
             state.avatarTransforms[index] = state.avatarTransforms[index] || { scale: 1, x: 0, y: 0 };
-            const newScale = Math.max(0.5, Math.min(2, state.avatarTransforms[index].scale * factor));
+            const newScale = Math.max(0.5, Math.min(5, state.avatarTransforms[index].scale * factor));
             state.avatarTransforms[index].scale = newScale;
             
             const img = document.querySelector(`.cell-avatar img[data-index="${index}"]`);
@@ -1089,12 +1194,8 @@
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
-                    const response = await fetch(e.target.result);
-                    const blob = await response.blob();
-                    const url = URL.createObjectURL(blob);
-                    
                     state.cells[index] = state.cells[index] || { avatar: null, name: '' };
-                    state.cells[index].avatar = url;
+                    state.cells[index].avatar = e.target.result;
                     state.avatarTransforms[index] = { scale: 1, x: 0, y: 0 };
                     
                     renderGrid();
@@ -1103,31 +1204,43 @@
                 } catch (error) {
                     console.error('处理失败:', error);
                     hideLoading();
-                    state.cells[index] = state.cells[index] || { avatar: null, name: '' };
-                    state.cells[index].avatar = e.target.result;
-                    state.avatarTransforms[index] = { scale: 1, x: 0, y: 0 };
-                    renderGrid();
-                    showToast('头像上传成功', 'success');
+                    showToast('头像处理失败', 'error');
                 }
+            };
+            reader.onerror = () => {
+                hideLoading();
+                showToast('头像读取失败', 'error');
             };
             reader.readAsDataURL(file);
         }
 
         async function exportImage() {
             showLoading('正在导出...');
+            console.log('开始导出，gridType:', state.gridType);
             
             const container = document.getElementById('gridContainer');
             
             try {
-                const pixelRatio = state.highRes ? 4 : 2;
+                if (!container) {
+                    throw new Error('未找到网格容器');
+                }
+                
+                if (typeof domtoimage === 'undefined') {
+                    throw new Error('domtoimage库未加载');
+                }
+                
+                const pixelRatio = 24;
+                console.log('pixelRatio:', pixelRatio);
+                
                 const dataUrl = await domtoimage.toPng(container, {
                     quality: 1,
                     pixelRatio: pixelRatio,
-                    bgcolor: '#000000'
+                    bgcolor: '#000000',
+                    cacheBust: true
                 });
                 
                 const link = document.createElement('a');
-                link.download = `会议合影_${state.gridType}人.png`;
+                link.download = `会议合影_${state.gridType}人_${pixelRatio}x.png`;
                 link.href = dataUrl;
                 link.click();
                 
@@ -1136,7 +1249,18 @@
             } catch (error) {
                 console.error('导出失败:', error);
                 hideLoading();
-                showToast('导出失败', 'error');
+                
+                if (error.message.includes('memory') || error.message.includes('heap')) {
+                    showToast('导出失败：内存不足，请选择较低分辨率', 'error');
+                } else if (error.message.includes('cors') || error.message.includes('cross-origin')) {
+                    showToast('导出失败：图片跨域，请重新上传本地图片', 'error');
+                } else if (error.message.includes('domtoimage库未加载')) {
+                    showToast('导出失败：图片处理库未加载，请刷新页面', 'error');
+                } else if (error.message.includes('未找到网格容器')) {
+                    showToast('导出失败：未找到预览区域', 'error');
+                } else {
+                    showToast('导出失败：' + error.message, 'error');
+                }
             }
         }
 
@@ -1147,6 +1271,75 @@
 
         function hideLoading() {
             document.getElementById('loadingOverlay').classList.remove('active');
+        }
+
+        function saveState() {
+            const saveData = {
+                gridType: state.gridType,
+                cells: state.cells,
+                backgroundImage: state.backgroundImage,
+                bgOpacity: state.bgOpacity,
+                fontSize: state.fontSize,
+                showMic: state.showMic,
+                avatarTransforms: state.avatarTransforms,
+                savedAt: new Date().toISOString()
+            };
+            
+            try {
+                localStorage.setItem('meetingPhotoState', JSON.stringify(saveData));
+                showToast('暂存成功', 'success');
+            } catch (error) {
+                console.error('保存失败:', error);
+                showToast('暂存失败', 'error');
+            }
+        }
+
+        function loadState() {
+            const savedData = localStorage.getItem('meetingPhotoState');
+            if (!savedData) {
+                showToast('暂无暂存数据', 'error');
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(savedData);
+                
+                state.gridType = data.gridType;
+                state.cells = data.cells;
+                state.backgroundImage = data.backgroundImage;
+                state.bgOpacity = data.bgOpacity || 70;
+                state.fontSize = data.fontSize || 70;
+                state.showMic = data.showMic !== undefined ? data.showMic : true;
+                state.avatarTransforms = data.avatarTransforms || {};
+                
+                document.querySelectorAll('.grid-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (parseInt(btn.dataset.grid) === state.gridType) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                document.getElementById('bgOpacity').value = state.bgOpacity;
+                document.getElementById('fontSize').value = state.fontSize;
+                
+                const micToggle = document.getElementById('showMic');
+                micToggle.classList.toggle('active', state.showMic);
+                
+                if (state.backgroundImage) {
+                    document.getElementById('bgPreview').src = state.backgroundImage;
+                    document.getElementById('bgPreview').classList.add('show');
+                }
+                
+                renderGrid();
+                updateRowControls();
+                updateCurrentLayout();
+                updateNameBoxStyle();
+                
+                showToast('加载成功', 'success');
+            } catch (error) {
+                console.error('加载失败:', error);
+                showToast('加载失败', 'error');
+            }
         }
 
         function showToast(message, type = '') {
