@@ -192,9 +192,8 @@ https://holazy.github.io/meeting-photo-generator/    <script src="https://cdn.js
             gap: 1px;
             background: #000;
             box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-            width: 80vw;
-            max-width: 1200px;
-            aspect-ratio: 4 / 3;
+            width: 90vw;
+            max-width: 1400px;
         }
 
         .grid-cell {
@@ -204,6 +203,7 @@ https://holazy.github.io/meeting-photo-generator/    <script src="https://cdn.js
             background-size: cover;
             background-position: center;
             background-color: #e8e8e8;
+            aspect-ratio: 16 / 9;
         }
 
         .cell-avatar {
@@ -420,19 +420,23 @@ https://holazy.github.io/meeting-photo-generator/    <script src="https://cdn.js
             <div class="panel-title">腾讯会议合影生成器</div>
             
             <div class="section">
-                <div class="section-label">选择宫格</div>
+                <div class="section-label">选择行数 (4×n)</div>
                 <div class="grid-options">
-                    <button class="grid-btn active" data-grid="9">
-                        <span>▦</span>
-                        9宫格
+                    <button class="grid-btn active" data-grid="8">
+                        <span>▦▦</span>
+                        4×2 (8人)
+                    </button>
+                    <button class="grid-btn" data-grid="12">
+                        <span>▦▦▦</span>
+                        4×3 (12人)
+                    </button>
+                    <button class="grid-btn" data-grid="16">
+                        <span>▦▦▦▦</span>
+                        4×4 (16人)
                     </button>
                     <button class="grid-btn" data-grid="20">
-                        <span>▦▦</span>
-                        20宫格
-                    </button>
-                    <button class="grid-btn" data-grid="25">
-                        <span>▦▦▦</span>
-                        25宫格
+                        <span>▦▦▦▦▦</span>
+                        4×5 (20人)
                     </button>
                 </div>
             </div>
@@ -449,7 +453,7 @@ https://holazy.github.io/meeting-photo-generator/    <script src="https://cdn.js
 
             <div class="tips">
                 <strong>使用说明：</strong><br>
-                1. 选择宫格数量<br>
+                1. 选择行数 (4×n)<br>
                 2. 上传背景图片（可选）<br>
                 3. 点击或拖拽上传人物头像<br>
                 4. 在左下角输入参会人姓名<br>
@@ -476,15 +480,16 @@ https://holazy.github.io/meeting-photo-generator/    <script src="https://cdn.js
 
     <script>
         const state = {
-            gridType: 9,
+            gridType: 8,
             cells: [],
             backgroundImage: null
         };
 
         const gridConfigs = {
-            9: { cols: 3, rows: 3, width: 280, height: 210 },
-            20: { cols: 4, rows: 5, width: 220, height: 165 },
-            25: { cols: 5, rows: 5, width: 200, height: 150 }
+            8: { cols: 4, rows: 2 },
+            12: { cols: 4, rows: 3 },
+            16: { cols: 4, rows: 4 },
+            20: { cols: 4, rows: 5 }
         };
 
         function init() {
