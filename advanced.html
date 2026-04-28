@@ -70,7 +70,7 @@
         .grid-btn {
             flex: 1;
             min-width: calc(50% - 4px);
-            padding: 12px;
+            padding: 10px;
             border: 2px solid #e8e8e8;
             border-radius: 8px;
             background: #fff;
@@ -80,6 +80,7 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
+            font-size: 12px;
         }
 
         .grid-btn:hover {
@@ -94,7 +95,47 @@
         }
 
         .grid-btn span {
-            font-size: 20px;
+            font-size: 18px;
+        }
+
+        .row-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .row-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #d9d9d9;
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .row-btn:hover {
+            background: #f5f5f5;
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .row-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .current-layout {
+            text-align: center;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #666;
         }
 
         .upload-area {
@@ -147,35 +188,6 @@
         .bg-preview.show {
             display: block;
         }
-
-        .theme-options {
-            display: flex;
-            gap: 8px;
-        }
-
-        .theme-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .theme-btn:hover {
-            transform: scale(1.1);
-        }
-
-        .theme-btn.active {
-            border-color: #fff;
-            box-shadow: 0 0 0 2px rgba(0,0,0,0.2);
-        }
-
-        .theme-red { background: linear-gradient(135deg, #ff6b6b, #ee5a5a); }
-        .theme-blue { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
-        .theme-purple { background: linear-gradient(135deg, #a855f7, #7c3aed); }
-        .theme-green { background: linear-gradient(135deg, #84fab0, #8fd3f4); }
-        .theme-orange { background: linear-gradient(135deg, #ffecd2, #fcb69f); }
 
         .input-group {
             display: flex;
@@ -261,7 +273,7 @@
             padding: 24px;
             background: #fff;
             border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 32px rgba(24, 144, 255, 0.1);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -311,6 +323,8 @@
             max-height: 100%;
             object-fit: contain;
             border-radius: 4px;
+            cursor: move;
+            user-select: none;
         }
 
         .grid-cell:hover {
@@ -390,6 +404,38 @@
 
         .cell-name-input::placeholder {
             color: rgba(255,255,255,0.5);
+        }
+
+        .image-controls {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            display: none;
+            gap: 4px;
+            z-index: 20;
+        }
+
+        .grid-cell:hover .image-controls {
+            display: flex;
+        }
+
+        .control-btn {
+            width: 24px;
+            height: 24px;
+            background: rgba(0,0,0,0.7);
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(0,0,0,0.9);
         }
 
         .loading-overlay {
@@ -491,6 +537,23 @@
         .tips strong {
             color: #333;
         }
+
+        .resize-handle {
+            position: absolute;
+            bottom: 12%;
+            right: 5%;
+            width: 12px;
+            height: 12px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            cursor: nwse-resize;
+            display: none;
+            z-index: 15;
+        }
+
+        .grid-cell:hover .resize-handle {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -517,17 +580,27 @@
                         <span>▦▦▦▦▦</span>
                         4×5 (20人)
                     </button>
+                    <button class="grid-btn" data-grid="24">
+                        <span>▦▦▦▦▦▦</span>
+                        4×6 (24人)
+                    </button>
+                    <button class="grid-btn" data-grid="28">
+                        <span>▦▦▦▦▦▦▦</span>
+                        4×7 (28人)
+                    </button>
                 </div>
             </div>
 
             <div class="section">
-                <div class="section-label">选择主题色</div>
-                <div class="theme-options">
-                    <button class="theme-btn theme-red active" data-theme="red"></button>
-                    <button class="theme-btn theme-blue" data-theme="blue"></button>
-                    <button class="theme-btn theme-purple" data-theme="purple"></button>
-                    <button class="theme-btn theme-green" data-theme="green"></button>
-                    <button class="theme-btn theme-orange" data-theme="orange"></button>
+                <div class="section-label">调整行数</div>
+                <div class="current-layout" id="currentLayout">当前: 4×2 (8人)</div>
+                <div class="row-controls">
+                    <button class="row-btn" id="addRow" title="增加一行">
+                        <span>+</span> 添加行
+                    </button>
+                    <button class="row-btn" id="removeRow" title="删除一行">
+                        <span>-</span> 删除行
+                    </button>
                 </div>
             </div>
 
@@ -566,11 +639,12 @@
 
             <div class="tips">
                 <strong>使用说明：</strong><br>
-                1. 选择布局和主题<br>
+                1. 选择布局或调整行数<br>
                 2. 上传背景图片（可选）<br>
-                3. 点击格子上传头像<br>
-                4. 输入参会人姓名<br>
-                5. 点击导出保存
+                3. 点击格子上传头像（支持拖拽）<br>
+                4. 拖拽调整头像位置和大小<br>
+                5. 输入参会人姓名<br>
+                6. 点击导出保存
             </div>
 
             <button class="export-btn" id="exportBtn">📥 导出合影</button>
@@ -601,31 +675,26 @@
             gridType: 8,
             cells: [],
             backgroundImage: null,
-            theme: 'red',
             bgOpacity: 70,
             fontSize: 70,
             showMic: true,
-            highRes: true
+            highRes: true,
+            avatarTransforms: {}
         };
 
         const gridConfigs = {
             8: { cols: 4, rows: 2 },
             12: { cols: 4, rows: 3 },
             16: { cols: 4, rows: 4 },
-            20: { cols: 4, rows: 5 }
-        };
-
-        const themes = {
-            red: 'linear-gradient(135deg, #ff6b6b, #ee5a5a)',
-            blue: 'linear-gradient(135deg, #4ecdc4, #44a08d)',
-            purple: 'linear-gradient(135deg, #a855f7, #7c3aed)',
-            green: 'linear-gradient(135deg, #84fab0, #8fd3f4)',
-            orange: 'linear-gradient(135deg, #ffecd2, #fcb69f)'
+            20: { cols: 4, rows: 5 },
+            24: { cols: 4, rows: 6 },
+            28: { cols: 4, rows: 7 }
         };
 
         function init() {
             setupEventListeners();
             renderGrid();
+            updateRowControls();
         }
 
         function setupEventListeners() {
@@ -634,19 +703,20 @@
                     document.querySelectorAll('.grid-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     state.gridType = parseInt(btn.dataset.grid);
-                    state.cells = [];
+                    const newCells = [];
+                    for (let i = 0; i < state.gridType; i++) {
+                        newCells[i] = state.cells[i] || { avatar: null, name: '' };
+                    }
+                    state.cells = newCells;
+                    state.avatarTransforms = {};
                     renderGrid();
+                    updateRowControls();
+                    updateCurrentLayout();
                 });
             });
 
-            document.querySelectorAll('.theme-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    state.theme = btn.dataset.theme;
-                    document.body.style.background = themes[state.theme];
-                });
-            });
+            document.getElementById('addRow').addEventListener('click', addRow);
+            document.getElementById('removeRow').addEventListener('click', removeRow);
 
             document.getElementById('bgOpacity').addEventListener('input', (e) => {
                 state.bgOpacity = parseInt(e.target.value);
@@ -662,6 +732,51 @@
             document.getElementById('highRes').addEventListener('click', toggleHighRes);
             document.getElementById('exportBtn').addEventListener('click', exportImage);
             setupBackgroundUpload();
+        }
+
+        function updateRowControls() {
+            const config = gridConfigs[state.gridType];
+            document.getElementById('addRow').disabled = config.rows >= 7;
+            document.getElementById('removeRow').disabled = config.rows <= 2;
+        }
+
+        function updateCurrentLayout() {
+            const config = gridConfigs[state.gridType];
+            document.getElementById('currentLayout').textContent = `当前: 4×${config.rows} (${state.gridType}人)`;
+        }
+
+        function addRow() {
+            const config = gridConfigs[state.gridType];
+            if (config.rows >= 7) return;
+            
+            const newRows = config.rows + 1;
+            const newGridType = 4 * newRows;
+            
+            for (let i = state.gridType; i < newGridType; i++) {
+                state.cells[i] = { avatar: null, name: '' };
+            }
+            
+            state.gridType = newGridType;
+            renderGrid();
+            updateRowControls();
+            updateCurrentLayout();
+            showToast(`已增加一行，当前: 4×${newRows}`, 'success');
+        }
+
+        function removeRow() {
+            const config = gridConfigs[state.gridType];
+            if (config.rows <= 2) return;
+            
+            const newRows = config.rows - 1;
+            const newGridType = 4 * newRows;
+            
+            state.cells = state.cells.slice(0, newGridType);
+            state.gridType = newGridType;
+            
+            renderGrid();
+            updateRowControls();
+            updateCurrentLayout();
+            showToast(`已删除一行，当前: 4×${newRows}`, 'success');
         }
 
         function toggleMic() {
@@ -747,11 +862,36 @@
             container.style.gridTemplateRows = `repeat(${config.rows}, 1fr)`;
             container.innerHTML = '';
 
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+
+            container.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const rect = container.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const cellWidth = rect.width / config.cols;
+                    const cellHeight = rect.height / config.rows;
+                    const col = Math.floor(x / cellWidth);
+                    const row = Math.floor(y / cellHeight);
+                    const index = row * config.cols + col;
+                    
+                    if (index < state.gridType) {
+                        handleAvatarUpload(index, file);
+                    }
+                }
+            });
+
             for (let i = 0; i < state.gridType; i++) {
                 const cell = state.cells[i] || { avatar: null, name: '' };
+                const transform = state.avatarTransforms[i] || { scale: 1, x: 0, y: 0 };
                 
                 const cellEl = document.createElement('div');
                 cellEl.className = 'grid-cell';
+                cellEl.dataset.index = i;
                 
                 if (state.backgroundImage) {
                     cellEl.style.backgroundImage = `url(${state.backgroundImage})`;
@@ -760,11 +900,52 @@
                 if (cell.avatar) {
                     const avatarDiv = document.createElement('div');
                     avatarDiv.className = 'cell-avatar';
+                    
                     const avatarImg = document.createElement('img');
                     avatarImg.src = cell.avatar;
+                    avatarImg.style.transform = `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`;
+                    avatarImg.dataset.index = i;
+                    
                     avatarDiv.appendChild(avatarImg);
                     cellEl.appendChild(avatarDiv);
+
+                    initDragResize(i, avatarImg);
                 }
+
+                const imageControls = document.createElement('div');
+                imageControls.className = 'image-controls';
+                
+                const zoomInBtn = document.createElement('button');
+                zoomInBtn.className = 'control-btn';
+                zoomInBtn.innerHTML = '+';
+                zoomInBtn.title = '放大';
+                zoomInBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    zoomImage(i, 1.1);
+                });
+                
+                const zoomOutBtn = document.createElement('button');
+                zoomOutBtn.className = 'control-btn';
+                zoomOutBtn.innerHTML = '−';
+                zoomOutBtn.title = '缩小';
+                zoomOutBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    zoomImage(i, 0.9);
+                });
+                
+                const resetBtn = document.createElement('button');
+                resetBtn.className = 'control-btn';
+                resetBtn.innerHTML = '↺';
+                resetBtn.title = '重置';
+                resetBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    resetImage(i);
+                });
+                
+                imageControls.appendChild(zoomOutBtn);
+                imageControls.appendChild(zoomInBtn);
+                imageControls.appendChild(resetBtn);
+                cellEl.appendChild(imageControls);
 
                 const overlay = document.createElement('div');
                 overlay.className = 'cell-upload-overlay';
@@ -808,6 +989,65 @@
             }
         }
 
+        function initDragResize(index, img) {
+            let isDragging = false;
+            let startX, startY, startTranslateX, startTranslateY;
+            
+            img.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                const transform = state.avatarTransforms[index] || { scale: 1, x: 0, y: 0 };
+                startTranslateX = transform.x;
+                startTranslateY = transform.y;
+                
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+            
+            function onMouseMove(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                
+                state.avatarTransforms[index] = state.avatarTransforms[index] || { scale: 1, x: 0, y: 0 };
+                state.avatarTransforms[index].x = startTranslateX + dx;
+                state.avatarTransforms[index].y = startTranslateY + dy;
+                
+                img.style.transform = `translate(${state.avatarTransforms[index].x}px, ${state.avatarTransforms[index].y}px) scale(${state.avatarTransforms[index].scale})`;
+            }
+            
+            function onMouseUp() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+        }
+
+        function zoomImage(index, factor) {
+            state.avatarTransforms[index] = state.avatarTransforms[index] || { scale: 1, x: 0, y: 0 };
+            const newScale = Math.max(0.5, Math.min(2, state.avatarTransforms[index].scale * factor));
+            state.avatarTransforms[index].scale = newScale;
+            
+            const img = document.querySelector(`.cell-avatar img[data-index="${index}"]`);
+            if (img) {
+                img.style.transform = `translate(${state.avatarTransforms[index].x}px, ${state.avatarTransforms[index].y}px) scale(${state.avatarTransforms[index].scale})`;
+            }
+        }
+
+        function resetImage(index) {
+            state.avatarTransforms[index] = { scale: 1, x: 0, y: 0 };
+            
+            const img = document.querySelector(`.cell-avatar img[data-index="${index}"]`);
+            if (img) {
+                img.style.transform = 'translate(0px, 0px) scale(1)';
+            }
+        }
+
         function openAvatarUpload(index) {
             const input = document.createElement('input');
             input.type = 'file';
@@ -833,6 +1073,7 @@
                     
                     state.cells[index] = state.cells[index] || { avatar: null, name: '' };
                     state.cells[index].avatar = url;
+                    state.avatarTransforms[index] = { scale: 1, x: 0, y: 0 };
                     
                     renderGrid();
                     hideLoading();
@@ -842,6 +1083,7 @@
                     hideLoading();
                     state.cells[index] = state.cells[index] || { avatar: null, name: '' };
                     state.cells[index].avatar = e.target.result;
+                    state.avatarTransforms[index] = { scale: 1, x: 0, y: 0 };
                     renderGrid();
                     showToast('头像上传成功', 'success');
                 }
