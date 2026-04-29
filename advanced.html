@@ -408,13 +408,12 @@
             left: 0;
             height: 10%;
             background: rgba(0,0,0,0.7);
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            padding: 0 8px;
+            padding: 0 12px;
             gap: 4px;
-            width: auto;
-            min-width: 30%;
-            max-width: 60%;
+            max-width: 100%;
+            box-sizing: border-box;
             font-size: 100%;
             z-index: 3;
         }
@@ -435,27 +434,23 @@
         }
 
         .cell-name-input {
-            flex: 1;
-            background: transparent;
-            border: none;
             color: #fff;
             font-size: calc(100% * 0.7);
-            text-align: left;
             font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            line-height: 1;
+            height: 14px;
             outline: none;
             white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1;
-            height: 14px;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            align-items: center;
+            min-width: 2em;
+            max-width: calc(100vw);
+            cursor: text;
         }
 
-        .cell-name-input::placeholder {
+        .cell-name-input:empty::before {
+            content: attr(data-placeholder);
             color: rgba(255,255,255,0.5);
+            pointer-events: none;
         }
 
         .image-controls {
@@ -1179,16 +1174,15 @@
                     nameBox.appendChild(micIcon);
                 }
                 
-                const nameInput = document.createElement('input');
-                nameInput.type = 'text';
+                const nameInput = document.createElement('span');
                 nameInput.className = 'cell-name-input';
-                nameInput.placeholder = '姓名 院校';
-                nameInput.value = cell.name;
-                nameInput.maxLength = 20;
+                nameInput.contentEditable = 'true';
+                nameInput.dataset.placeholder = '姓名 院校';
+                nameInput.textContent = cell.name || '';
                 nameInput.style.fontSize = `${state.fontSize}%`;
                 nameInput.addEventListener('input', (e) => {
                     state.cells[i] = state.cells[i] || { avatar: null, name: '' };
-                    state.cells[i].name = e.target.value;
+                    state.cells[i].name = e.target.textContent;
                 });
                 nameInput.addEventListener('click', (e) => e.stopPropagation());
 
