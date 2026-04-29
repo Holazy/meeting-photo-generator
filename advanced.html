@@ -794,14 +794,20 @@
             </div>
 
             <div class="section">
-                <div class="section-label">调整行数</div>
-                <div class="current-layout" id="currentLayout">当前: 4×2 (8人)</div>
+                <div class="section-label">调整行列</div>
+                <div class="current-layout" id="currentLayout">当前: 4列 × 2行 (8人)</div>
                 <div class="row-controls">
                     <button class="row-btn" id="addRow" title="增加一行">
-                        <span>+</span> 添加行
+                        <span>+</span> 行
                     </button>
                     <button class="row-btn" id="removeRow" title="删除一行">
-                        <span>-</span> 删除行
+                        <span>-</span> 行
+                    </button>
+                    <button class="row-btn" id="addCol" title="增加一列">
+                        <span>+</span> 列
+                    </button>
+                    <button class="row-btn" id="removeCol" title="删除一列">
+                        <span>-</span> 列
                     </button>
                 </div>
             </div>
@@ -899,6 +905,8 @@
 
     <script>
         const state = {
+            cols: 4,
+            rows: 2,
             gridType: 8,
             cells: [],
             backgroundImage: null,
@@ -908,7 +916,7 @@
             avatarTransforms: {}
         };
 
-        const gridConfigs = {
+        const presetConfigs = {
             8: { cols: 4, rows: 2 },
             12: { cols: 4, rows: 3 },
             16: { cols: 4, rows: 4 },
@@ -938,6 +946,9 @@
                     document.querySelectorAll('.grid-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     state.gridType = parseInt(btn.dataset.grid);
+                    const config = presetConfigs[state.gridType];
+                    state.cols = config.cols;
+                    state.rows = config.rows;
                     const newCells = [];
                     for (let i = 0; i < state.gridType; i++) {
                         newCells[i] = state.cells[i] || { avatar: null, name: '' };
@@ -952,6 +963,8 @@
 
             document.getElementById('addRow').addEventListener('click', addRow);
             document.getElementById('removeRow').addEventListener('click', removeRow);
+            document.getElementById('addCol').addEventListener('click', addCol);
+            document.getElementById('removeCol').addEventListener('click', removeCol);
 
             document.getElementById('bgOpacity').addEventListener('input', (e) => {
                 state.bgOpacity = parseInt(e.target.value);
@@ -988,48 +1001,81 @@
         }
 
         function updateRowControls() {
-            const config = gridConfigs[state.gridType];
-            document.getElementById('addRow').disabled = config.rows >= 7;
-            document.getElementById('removeRow').disabled = config.rows <= 2;
+            document.getElementById('addRow').disabled = state.rows >= 7;
+            document.getElementById('removeRow').disabled = state.rows <= 1;
+            document.getElementById('addCol').disabled = state.cols >= 7;
+            document.getElementById('removeCol').disabled = state.cols <= 1;
         }
 
         function updateCurrentLayout() {
-            const config = gridConfigs[state.gridType];
-            document.getElementById('currentLayout').textContent = `当前: 4×${config.rows} (${state.gridType}人)`;
+            const total = state.cols * state.rows;
+            document.getElementById('currentLayout').textContent = `当前: ${state.cols}列 × ${state.rows}行 (${total}人)`;
         }
 
         function addRow() {
-            const config = gridConfigs[state.gridType];
-            if (config.rows >= 7) return;
-            
-            const newRows = config.rows + 1;
-            const newGridType = 4 * newRows;
-            
-            for (let i = state.gridType; i < newGridType; i++) {
+            if (state.rows >= 7) return;
+            state.rows++;
+            state.gridType = state.cols * state.rows;
+            for (let i = state.gridType - state.cols; i < state.gridType; i++) {
                 state.cells[i] = { avatar: null, name: '' };
             }
-            
-            state.gridType = newGridType;
             renderGrid();
             updateRowControls();
             updateCurrentLayout();
-            showToast(`已增加一行，当前: 4×${newRows}`, 'success');
+            showToast(`已增加一行，当前: ${state.cols}×${state.rows}`, 'success');
         }
 
         function removeRow() {
-            const config = gridConfigs[state.gridType];
-            if (config.rows <= 2) return;
-            
-            const newRows = config.rows - 1;
-            const newGridType = 4 * newRows;
-            
-            state.cells = state.cells.slice(0, newGridType);
-            state.gridType = newGridType;
-            
+            if (state.rows <= 1) return;
+            state.rows--;
+            state.gridType = state.cols * state.rows;
+            state.cells = state.cells.slice(0, state.gridType);
             renderGrid();
             updateRowControls();
             updateCurrentLayout();
-            showToast(`已删除一行，当前: 4×${newRows}`, 'success');
+            showToast(`已删除一行，当前: ${state.cols}×${state.rows}`, 'success');
+        }
+
+        function addCol() {
+            if (state.cols >= 7) return;
+            const oldCols = state.cols;
+            const oldRows = state.rows;
+            state.cols++;
+            state.gridType = state.cols * state.rows;
+            const newCells = [];
+            for (let r = 0; r < oldRows; r++) {
+                for (let c = 0; c < state.cols; c++) {
+                    if (c < oldCols) {
+                        newCells[r * state.cols + c] = state.cells[r * oldCols + c] || { avatar: null, name: '' };
+                    } else {
+                        newCells[r * state.cols + c] = { avatar: null, name: '' };
+                    }
+                }
+            }
+            state.cells = newCells;
+            renderGrid();
+            updateRowControls();
+            updateCurrentLayout();
+            showToast(`已增加一列，当前: ${state.cols}×${state.rows}`, 'success');
+        }
+
+        function removeCol() {
+            if (state.cols <= 1) return;
+            const oldCols = state.cols;
+            const oldRows = state.rows;
+            state.cols--;
+            state.gridType = state.cols * state.rows;
+            const newCells = [];
+            for (let r = 0; r < oldRows; r++) {
+                for (let c = 0; c < state.cols; c++) {
+                    newCells[r * state.cols + c] = state.cells[r * oldCols + c] || { avatar: null, name: '' };
+                }
+            }
+            state.cells = newCells;
+            renderGrid();
+            updateRowControls();
+            updateCurrentLayout();
+            showToast(`已删除一列，当前: ${state.cols}×${state.rows}`, 'success');
         }
 
         function toggleMic() {
@@ -1212,11 +1258,10 @@
         }
 
         function renderGrid() {
-            const config = gridConfigs[state.gridType];
             const container = document.getElementById('gridContainer');
             
-            container.style.gridTemplateColumns = `repeat(${config.cols}, 1fr)`;
-            container.style.gridTemplateRows = `repeat(${config.rows}, 1fr)`;
+            container.style.gridTemplateColumns = `repeat(${state.cols}, 1fr)`;
+            container.style.gridTemplateRows = `repeat(${state.rows}, 1fr)`;
             container.innerHTML = '';
 
             container.addEventListener('dragover', (e) => {
@@ -1230,11 +1275,11 @@
                     const rect = container.getBoundingClientRect();
                     const x = e.clientX - rect.left;
                     const y = e.clientY - rect.top;
-                    const cellWidth = rect.width / config.cols;
-                    const cellHeight = rect.height / config.rows;
+                    const cellWidth = rect.width / state.cols;
+                    const cellHeight = rect.height / state.rows;
                     const col = Math.floor(x / cellWidth);
                     const row = Math.floor(y / cellHeight);
-                    const index = row * config.cols + col;
+                    const index = row * state.cols + col;
                     
                     if (index < state.gridType) {
                         handleAvatarUpload(index, file);
@@ -1587,6 +1632,8 @@
         function saveState() {
             const saveData = {
                 gridType: state.gridType,
+                cols: state.cols,
+                rows: state.rows,
                 cells: state.cells,
                 backgroundImage: state.backgroundImage,
                 bgOpacity: state.bgOpacity,
@@ -1631,6 +1678,8 @@
                     const data = JSON.parse(e.target.result);
                     
                     state.gridType = data.gridType;
+                    state.cols = data.cols || presetConfigs[data.gridType]?.cols || 4;
+                    state.rows = data.rows || presetConfigs[data.gridType]?.rows || Math.floor(data.gridType / 4);
                     state.cells = data.cells;
                     state.backgroundImage = data.backgroundImage;
                     state.bgOpacity = data.bgOpacity || 70;
