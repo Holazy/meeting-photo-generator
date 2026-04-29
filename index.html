@@ -497,6 +497,66 @@
             background: #f0fff0;
             color: #52c41a;
         }
+
+        .name-upload-area {
+            border: 2px dashed #d9d9d9;
+            border-radius: 8px;
+            padding: 10px;
+            background: #fafafa;
+            transition: all 0.3s ease;
+        }
+
+        .name-upload-area:hover {
+            border-color: #1890ff;
+            background: #e6f7ff;
+        }
+
+        .name-textarea {
+            width: 100%;
+            height: 80px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 12px;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.3s ease;
+            background: #fff;
+        }
+
+        .name-textarea:focus {
+            border-color: #1890ff;
+        }
+
+        .name-textarea::placeholder {
+            color: #bbb;
+        }
+
+        .name-apply-btn {
+            margin-top: 8px;
+            padding: 8px 16px;
+            background: #1890ff;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .name-apply-btn:hover {
+            background: #096dd9;
+        }
+
+        .name-hint {
+            font-size: 11px;
+            color: #999;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -546,6 +606,15 @@
                 <div class="global-drop-zone" id="globalDropZone">
                     拖拽图片到此处批量导入<br>
                     <span style="font-size:11px;">按顺序填充到空白格子</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-label">批量设置姓名</div>
+                <div class="name-upload-area">
+                    <textarea class="name-textarea" id="batchNameTextarea" placeholder="每行一个姓名，例如：&#10;张三&#10;李四&#10;王五"></textarea>
+                    <button class="name-apply-btn" id="batchNameApplyBtn">应用姓名</button>
+                    <div class="name-hint">每行一个姓名，按顺序填充到已上传头像的格子</div>
                 </div>
             </div>
 
@@ -674,6 +743,8 @@
                 };
                 input.click();
             });
+
+            document.getElementById('batchNameApplyBtn').addEventListener('click', applyBatchNames);
         }
 
         function updateLayoutInfo() {
@@ -1047,6 +1118,40 @@
                 }
             }
             return -1;
+        }
+
+        function applyBatchNames() {
+            const textarea = document.getElementById('batchNameTextarea');
+            const text = textarea.value.trim();
+            if (!text) {
+                showToast('请输入姓名', 'error');
+                return;
+            }
+
+            const names = text.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+            if (names.length === 0) {
+                showToast('请输入有效的姓名', 'error');
+                return;
+            }
+
+            let applied = 0;
+            let nameIndex = 0;
+            const totalCells = state.cols * state.rows;
+
+            for (let i = 0; i < totalCells && nameIndex < names.length; i++) {
+                if (state.cells[i] && state.cells[i].avatar) {
+                    state.cells[i].name = names[nameIndex];
+                    nameIndex++;
+                    applied++;
+                }
+            }
+
+            if (applied > 0) {
+                renderGrid();
+                showToast(`成功设置 ${applied} 个姓名`, 'success');
+            } else {
+                showToast('没有已上传头像的格子，请先上传头像', 'error');
+            }
         }
 
         async function exportImage() {
